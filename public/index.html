@@ -1218,7 +1218,7 @@ async function genPrompt(name, info, styleVal, fwVal, kwVal, styleAI, fwAI, kwAI
     ? `Pertama, pilihkan style design paling cocok dari opsi ini SAJA (WAJIB pilih dari sini, tidak boleh menggunakan style lain): ${STYLE_OPTIONS.join(', ')}.`
     : '';
   const fwAIInstr = fwAI
-    ? `Juga pilihkan tipe website paling cocok dari opsi ini SAJA (WAJIB pilih dari sini, tidak boleh menggunakan tipe lain): ${FW_OPTIONS.join(', ')}.`
+    ? `Pilihkan tipe website paling cocok. WAJIB pilih SATU dari opsi berikut dan tulis PERSIS sama (copy-paste, jangan diubah): ${FW_OPTIONS.join(' | ')}. Tulis di field "framework" dengan teks yang IDENTIK dengan salah satu opsi di atas.`
     : '';
 
   const styleUsed = styleAI ? '[AI akan memilih dari dropdown]' : (styleVal || 'tidak dipilih');
@@ -1265,13 +1265,15 @@ async function genPrompt(name, info, styleVal, fwVal, kwVal, styleAI, fwAI, kwAI
   parsed = null;
   plainOutput = result.prompt;
 
-  // Apply AI picks
+  // Apply AI picks — fuzzy match supaya tidak gagal walau AI balas sedikit berbeda
   if (styleAI && result.aiPicks?.style) {
-    document.getElementById('styleSelect').value = result.aiPicks.style;
+    const matched = fuzzyMatchOption('styleSelect', result.aiPicks.style);
+    if (matched) document.getElementById('styleSelect').value = matched;
     document.getElementById('styleSelect').disabled = false;
   }
   if (fwAI && result.aiPicks?.framework) {
-    document.getElementById('fwSelect').value = result.aiPicks.framework;
+    const matched = fuzzyMatchOption('fwSelect', result.aiPicks.framework);
+    if (matched) document.getElementById('fwSelect').value = matched;
     document.getElementById('fwSelect').disabled = false;
   }
 
@@ -1405,6 +1407,37 @@ function showErr(msg) {
       <div class="eicon">⚠️</div>
       <div class="emsg">${esc(msg)}</div>
     </div>`;
+}
+
+// ── FUZZY MATCH DROPDOWN ──
+// Cari option value yang paling cocok dengan string dari AI
+function fuzzyMatchOption(selectId, aiValue) {
+  const sel = document.getElementById(selectId);
+  if (!sel || !aiValue) return null;
+  const val = aiValue.toLowerCase().trim();
+  
+  // 1. Exact match dulu
+  for (const opt of sel.options) {
+    if (opt.value.toLowerCase() === val) return opt.value;
+  }
+  
+  // 2. Starts with
+  for (const opt of sel.options) {
+    if (opt.value.toLowerCase().startsWith(val) || val.startsWith(opt.value.toLowerCase())) return opt.value;
+  }
+  
+  // 3. Contains
+  for (const opt of sel.options) {
+    if (opt.value.toLowerCase().includes(val) || val.includes(opt.value.toLowerCase())) return opt.value;
+  }
+  
+  // 4. First word match
+  const firstWord = val.split(/\s+/)[0];
+  for (const opt of sel.options) {
+    if (opt.value.toLowerCase().includes(firstWord)) return opt.value;
+  }
+  
+  return null;
 }
 
 function copyOut() {
