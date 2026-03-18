@@ -4,790 +4,782 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WebPrompt AI — Website Prompt Generator</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #16161f;
-    --border: #1e1e2e;
-    --border2: #2a2a3d;
-    --text: #e8e8f0;
-    --muted: #5a5a7a;
-    --accent: #ff4d6d;
-    --accent2: #ff8c42;
-    --accent3: #7c3aed;
-    --green: #00d68f;
-    --blue: #4d9fff;
-    --glow: rgba(255, 77, 109, 0.15);
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* BG noise */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* HEADER */
-  header {
-    padding: 20px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    position: relative;
-    z-index: 1;
-  }
-
-  .logo {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 20px;
-    letter-spacing: -0.5px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .logo-icon {
-    width: 32px; height: 32px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 8px;
-    display: grid;
-    place-items: center;
-    font-size: 16px;
-  }
-
-  .logo span { color: var(--muted); font-weight: 400; }
-
-  .header-badge {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    padding: 4px 10px;
-    border-radius: 20px;
-    opacity: 0.7;
-  }
-
-  /* MAIN LAYOUT */
-  .main {
-    display: grid;
-    grid-template-columns: 460px 1fr;
-    gap: 0;
-    height: calc(100vh - 65px);
-    position: relative;
-    z-index: 1;
-  }
-
-  /* LEFT PANEL */
-  .left-panel {
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .left-panel::-webkit-scrollbar { width: 4px; }
-  .left-panel::-webkit-scrollbar-track { background: transparent; }
-  .left-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-  /* CARDS */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    transition: border-color 0.2s;
-  }
-
-  .card:hover { border-color: var(--border2); }
-
-  .card-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .card-title::before {
-    content: '';
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-  }
-
-  /* AI PROVIDER TABS */
-  .provider-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  .provider-tab {
-    padding: 7px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border2);
-    background: transparent;
-    color: var(--muted);
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .provider-tab:hover { border-color: var(--text); color: var(--text); }
-
-  .provider-tab.active {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-color: transparent;
-    color: white;
-    font-weight: 600;
-  }
-
-  /* API KEY INPUT */
-  .api-key-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-  }
-
-  .input-wrap {
-    position: relative;
-  }
-
-  .input-wrap input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    padding: 11px 44px 11px 14px;
-    color: var(--text);
-    font-size: 13px;
-    font-family: 'Space Mono', monospace;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .input-wrap input:focus { border-color: var(--accent); }
-  .input-wrap input::placeholder { color: var(--muted); font-family: 'Inter', sans-serif; }
-
-  .eye-btn {
-    position: absolute;
-    right: 12px; top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    padding: 2px;
-    transition: color 0.2s;
-  }
-
-  .eye-btn:hover { color: var(--text); }
-
-  .api-hint {
-    margin-top: 8px;
-    font-size: 11px;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  /* TEXT INPUTS */
-  .field-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 8px;
-    letter-spacing: 0.3px;
-  }
-
-  input[type="text"], textarea {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    padding: 11px 14px;
-    color: var(--text);
-    font-size: 13px;
-    font-family: 'Inter', sans-serif;
-    outline: none;
-    transition: border-color 0.2s;
-    resize: none;
-  }
-
-  input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
-  input[type="text"]::placeholder, textarea::placeholder { color: var(--muted); font-size: 12px; }
-
-  textarea { min-height: 100px; line-height: 1.6; }
-
-  /* FIELD GROUPS */
-  .field-group { margin-bottom: 16px; }
-  .field-group:last-child { margin-bottom: 0; }
-
-  /* DROPDOWN ROW */
-  .dropdown-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .dropdown-row select {
-    flex: 1;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    padding: 11px 14px;
-    color: var(--text);
-    font-size: 13px;
-    font-family: 'Inter', sans-serif;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%235a5a7a' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    padding-right: 36px;
-  }
-
-  select:focus { border-color: var(--accent); }
-  select option { background: var(--surface2); }
-
-  /* AI PICK TOGGLE */
-  .ai-pick-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    min-width: 48px;
-  }
-
-  .ai-pick-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 8px;
-    color: var(--muted);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .toggle-wrap {
-    position: relative;
-    width: 38px;
-    height: 20px;
-  }
-
-  .toggle-wrap input { opacity: 0; width: 0; height: 0; }
-
-  .toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background: var(--border2);
-    border-radius: 20px;
-    transition: all 0.3s;
-  }
-
-  .toggle-slider::before {
-    content: '';
-    position: absolute;
-    width: 14px; height: 14px;
-    left: 3px; top: 3px;
-    background: var(--muted);
-    border-radius: 50%;
-    transition: all 0.3s;
-  }
-
-  input:checked + .toggle-slider {
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-  }
-
-  input:checked + .toggle-slider::before {
-    transform: translateX(18px);
-    background: white;
-  }
-
-  /* KEYWORDS SELECT (multi-badge style) */
-  .keywords-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    padding: 10px;
-    min-height: 48px;
-    transition: border-color 0.2s;
-  }
-
-  .keywords-container:focus-within { border-color: var(--accent); }
-
-  .keyword-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    border: 1px solid var(--border2);
-    background: var(--surface);
-    color: var(--muted);
-    user-select: none;
-  }
-
-  .keyword-badge:hover { border-color: var(--accent); color: var(--text); }
-
-  .keyword-badge.selected {
-    background: rgba(255, 77, 109, 0.15);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  /* BUTTONS */
-  .btn-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 4px;
-  }
-
-  .btn-reset {
-    padding: 12px 20px;
-    border-radius: 10px;
-    border: 1px solid var(--border2);
-    background: transparent;
-    color: var(--muted);
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-reset:hover { border-color: var(--text); color: var(--text); }
-
-  .btn-generate {
-    flex: 1;
-    padding: 13px 24px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-    color: white;
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
-    letter-spacing: 0.3px;
-  }
-
-  .btn-generate::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: white;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  .btn-generate:hover::before { opacity: 0.1; }
-  .btn-generate:active { transform: scale(0.99); }
-
-  .btn-generate:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .btn-prompt {
-    flex: 1;
-    padding: 13px 24px;
-    border-radius: 10px;
-    border: 1px solid var(--accent3);
-    background: rgba(124, 58, 237, 0.1);
-    color: #a78bfa;
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    letter-spacing: 0.3px;
-  }
-
-  .btn-prompt:hover { background: rgba(124, 58, 237, 0.2); }
-  .btn-prompt:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* RIGHT PANEL */
-  .right-panel {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .output-header {
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .output-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .output-title .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  .output-dot-off {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--muted);
-  }
-
-  .output-actions {
-    display: flex;
-    gap: 8px;
-  }
-
-  .action-btn {
-    padding: 6px 14px;
-    border-radius: 7px;
-    border: 1px solid var(--border2);
-    background: transparent;
-    color: var(--muted);
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: 'Inter', sans-serif;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .action-btn:hover { border-color: var(--text); color: var(--text); }
-
-  .action-btn.active {
-    border-color: var(--green);
-    color: var(--green);
-    background: rgba(0, 214, 143, 0.08);
-  }
-
-  /* OUTPUT CONTENT */
-  .output-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 28px;
-  }
-
-  .output-content::-webkit-scrollbar { width: 4px; }
-  .output-content::-webkit-scrollbar-track { background: transparent; }
-  .output-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-  /* EMPTY STATE */
-  .empty-state {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    opacity: 0.5;
-  }
-
-  .empty-icon {
-    font-size: 36px;
-    animation: float 3s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
-
-  .empty-text {
-    font-size: 13px;
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.7;
-  }
-
-  /* OUTPUT SECTIONS */
-  .output-section {
-    margin-bottom: 28px;
-    animation: fadeSlide 0.4s ease forwards;
-    opacity: 0;
-  }
-
-  @keyframes fadeSlide {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .output-section:nth-child(2) { animation-delay: 0.1s; }
-  .output-section:nth-child(3) { animation-delay: 0.2s; }
-  .output-section:nth-child(4) { animation-delay: 0.3s; }
-  .output-section:nth-child(5) { animation-delay: 0.4s; }
-
-  .section-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  .output-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px 20px;
-    line-height: 1.8;
-    font-size: 13.5px;
-    color: #c8c8d8;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  .output-box.prompt-box {
-    font-family: 'Space Mono', monospace;
-    font-size: 12px;
-    color: #a8e6c8;
-    background: rgba(0, 214, 143, 0.04);
-    border-color: rgba(0, 214, 143, 0.15);
-    line-height: 1.9;
-  }
-
-  .output-box .highlight {
-    color: var(--accent);
-    font-weight: 600;
-  }
-
-  /* LOADING */
-  .loading-wrap {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-  }
-
-  .loading-bars {
-    display: flex;
-    gap: 4px;
-    align-items: flex-end;
-    height: 32px;
-  }
-
-  .loading-bar {
-    width: 4px;
-    background: linear-gradient(to top, var(--accent), var(--accent2));
-    border-radius: 4px;
-    animation: barAnim 1.2s ease-in-out infinite;
-  }
-
-  .loading-bar:nth-child(1) { height: 16px; animation-delay: 0s; }
-  .loading-bar:nth-child(2) { height: 24px; animation-delay: 0.1s; }
-  .loading-bar:nth-child(3) { height: 32px; animation-delay: 0.2s; }
-  .loading-bar:nth-child(4) { height: 20px; animation-delay: 0.3s; }
-  .loading-bar:nth-child(5) { height: 12px; animation-delay: 0.4s; }
-
-  @keyframes barAnim {
-    0%, 100% { transform: scaleY(0.4); opacity: 0.4; }
-    50% { transform: scaleY(1); opacity: 1; }
-  }
-
-  .loading-text {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 1px;
-  }
-
-  /* TABS in right panel */
-  .output-tabs {
-    display: flex;
-    gap: 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .output-tab {
-    padding: 12px 20px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-    font-family: 'Inter', sans-serif;
-    background: none;
-    border-left: none;
+:root {
+  --bg: #0a0a0f;
+  --surface: #111118;
+  --surface2: #16161f;
+  --border: #1e1e2e;
+  --border2: #2a2a3d;
+  --text: #e8e8f0;
+  --muted: #5a5a7a;
+  --accent: #ff4d6d;
+  --accent2: #ff8c42;
+  --green: #00d68f;
+  --blue: #4d9fff;
+  --purple: #a78bfa;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ─── HEADER ─── */
+header {
+  height: 56px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,10,15,0.95);
+  backdrop-filter: blur(10px);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.3px;
+}
+
+.logo-icon {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+}
+
+.logo em { color: var(--muted); font-style: normal; font-weight: 400; }
+
+.badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  border: 1px solid rgba(255,77,109,0.35);
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+/* ─── LAYOUT ─── */
+.app {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  height: calc(100vh - 56px);
+}
+
+/* ─── LEFT PANEL ─── */
+.left {
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.left::-webkit-scrollbar { width: 3px; }
+.left::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ─── CARDS ─── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.card-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.card-title::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ─── PROVIDER TABS ─── */
+.provider-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.ptab {
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+
+.ptab:hover { color: var(--text); border-color: var(--text); }
+.ptab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ─── INPUTS ─── */
+.lbl {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.flabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 7px;
+}
+
+.iw { position: relative; }
+
+.iw input[type=password],
+.iw input[type=text] {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  padding: 10px 40px 10px 12px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'Space Mono', monospace;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.iw input:focus { border-color: var(--accent); }
+.iw input::placeholder { font-family: 'Inter', sans-serif; color: var(--muted); letter-spacing: 0; }
+
+.eye {
+  position: absolute;
+  right: 10px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  transition: color 0.15s;
+  padding: 2px;
+  display: flex; align-items: center;
+}
+.eye:hover { color: var(--text); }
+
+input[type=text].plain,
+textarea.plain {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: none;
+}
+
+input[type=text].plain:focus,
+textarea.plain:focus { border-color: var(--accent); }
+
+input[type=text].plain::placeholder,
+textarea.plain::placeholder { color: var(--muted); font-size: 12px; }
+
+textarea.plain { min-height: 90px; line-height: 1.6; }
+
+.api-hint {
+  margin-top: 7px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.fg { margin-bottom: 14px; }
+.fg:last-child { margin-bottom: 0; }
+
+/* ─── DROPDOWN ROW ─── */
+.drow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drow select {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  padding: 10px 32px 10px 12px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%235a5a7a' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.drow select:focus { border-color: var(--accent); }
+select option { background: #16161f; }
+select:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ─── AI PICK TOGGLE ─── */
+.aipick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.aipick-lbl {
+  font-family: 'Space Mono', monospace;
+  font-size: 7.5px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.toggle { position: relative; width: 36px; height: 19px; }
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+
+.tslider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--border2);
+  border-radius: 19px;
+  transition: all 0.25s;
+}
+
+.tslider::before {
+  content: '';
+  position: absolute;
+  width: 13px; height: 13px;
+  left: 3px; top: 3px;
+  background: var(--muted);
+  border-radius: 50%;
+  transition: all 0.25s;
+}
+
+.toggle input:checked + .tslider {
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+}
+
+.toggle input:checked + .tslider::before {
+  transform: translateX(17px);
+  background: #fff;
+}
+
+/* ─── KEYWORDS ─── */
+.kw-box {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-height: 44px;
+  transition: border-color 0.2s;
+  flex: 1;
+  min-width: 0;
+}
+
+.kw-box:focus-within { border-color: var(--accent); }
+
+.kbadge {
+  padding: 4px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--muted);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.kbadge:hover { border-color: var(--accent); color: var(--text); }
+.kbadge.on {
+  background: rgba(255,77,109,0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ─── BUTTONS ─── */
+.btn-row {
+  display: flex;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.btn-reset {
+  padding: 11px 16px;
+  border-radius: 9px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+
+.btn-reset:hover { border-color: var(--text); color: var(--text); }
+
+.btn-gen {
+  flex: 1;
+  padding: 11px 16px;
+  border-radius: 9px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.btn-gen:hover { opacity: 0.9; }
+.btn-gen:active { transform: scale(0.99); }
+.btn-gen:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-prompt {
+  flex: 1;
+  padding: 11px 16px;
+  border-radius: 9px;
+  border: 1px solid rgba(167,139,250,0.4);
+  background: rgba(124,58,237,0.1);
+  color: var(--purple);
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-prompt:hover { background: rgba(124,58,237,0.18); }
+.btn-prompt:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ─── RIGHT PANEL ─── */
+.right {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.out-header {
+  padding: 0 20px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.out-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dot-idle { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+.dot-live {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 7px var(--green);
+  animation: blink 2s infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+.out-actions { display: flex; gap: 6px; }
+
+.abtn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+
+.abtn:hover { border-color: var(--text); color: var(--text); }
+
+/* ─── OUTPUT TABS ─── */
+.out-tabs {
+  display: none;
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.out-tabs.visible { display: flex; }
+
+.otab {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  transition: all 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+
+.otab:hover { color: var(--text); }
+.otab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ─── OUTPUT BODY ─── */
+.out-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.out-body::-webkit-scrollbar { width: 3px; }
+.out-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* EMPTY */
+.empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0.4;
+  text-align: center;
+}
+
+.empty-icon { font-size: 32px; animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+.empty-text { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+/* OUTPUT SECTIONS */
+.osec {
+  margin-bottom: 24px;
+  animation: fadeUp 0.35s ease forwards;
+  opacity: 0;
+}
+
+.osec:nth-child(2) { animation-delay: 0.08s; }
+.osec:nth-child(3) { animation-delay: 0.16s; }
+.osec:nth-child(4) { animation-delay: 0.24s; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+.oslabel {
+  font-family: 'Space Mono', monospace;
+  font-size: 9.5px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.oslabel::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.obox {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  font-size: 13.5px;
+  color: #c8c8d8;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* PROMPT BOX — special styling */
+.prompt-meta {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.prompt-meta-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+
+.prompt-meta-row:last-child { border-bottom: none; }
+
+.pmr-key {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.pmr-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(255,77,109,0.08);
+  border: 1px solid rgba(255,77,109,0.2);
+  padding: 3px 10px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.pmr-kw {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.pmr-kw span {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--purple);
+  background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.25);
+  padding: 2px 9px;
+  border-radius: 20px;
+}
+
+.prompt-code-box {
+  background: #0d0d14;
+  border: 1px solid rgba(0,214,143,0.2);
+  border-radius: 10px;
+  padding: 18px 20px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: #9be8c8;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* STRUCTURE */
+.sitem {
+  display: flex;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.sitem:last-child { border-bottom: none; }
+.snum { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--accent); min-width: 22px; margin-top: 2px; }
+.sname { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.sdesc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* TECH TAGS */
+.ttags { display: flex; flex-wrap: wrap; gap: 6px; }
+.ttag {
+  padding: 4px 11px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-family: 'Space Mono', monospace;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+}
+.ttag.hi { border-color: var(--blue); color: var(--blue); background: rgba(77,159,255,0.07); }
+
+/* LOADING */
+.loading {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.lbars { display: flex; gap: 4px; align-items: flex-end; height: 28px; }
+
+.lbar {
+  width: 3px;
+  background: linear-gradient(to top, var(--accent), var(--accent2));
+  border-radius: 3px;
+  animation: barUp 1.1s ease-in-out infinite;
+}
+
+.lbar:nth-child(1){height:12px;animation-delay:0s}
+.lbar:nth-child(2){height:20px;animation-delay:0.1s}
+.lbar:nth-child(3){height:28px;animation-delay:0.2s}
+.lbar:nth-child(4){height:16px;animation-delay:0.3s}
+.lbar:nth-child(5){height:10px;animation-delay:0.4s}
+
+@keyframes barUp { 0%,100%{transform:scaleY(0.35);opacity:0.35} 50%{transform:scaleY(1);opacity:1} }
+
+.ltext {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+}
+
+/* ERROR */
+.errstate {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 24px;
+}
+
+.errstate .eicon { font-size: 28px; }
+.errstate .emsg { font-size: 13px; color: var(--accent); line-height: 1.6; max-width: 360px; }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  background: var(--surface);
+  border: 1px solid var(--green);
+  color: var(--green);
+  padding: 9px 16px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 999;
+  transform: translateY(16px);
+  opacity: 0;
+  transition: all 0.25s;
+  pointer-events: none;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ─── MOBILE TOGGLE ─── */
+.mobile-toggle {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 10px 22px;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 200;
+  box-shadow: 0 4px 20px rgba(255,77,109,0.35);
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .app {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: calc(100vh - 56px);
+  }
+
+  .left {
+    height: auto;
     border-right: none;
-    border-top: none;
-  }
-
-  .output-tab:hover { color: var(--text); }
-
-  .output-tab.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-  }
-
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-
-  /* STRUCTURE LIST */
-  .structure-item {
-    display: flex;
-    gap: 12px;
-    padding: 12px 0;
     border-bottom: 1px solid var(--border);
-    align-items: flex-start;
   }
 
-  .structure-item:last-child { border-bottom: none; }
-
-  .structure-num {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    min-width: 24px;
-    margin-top: 2px;
+  .right {
+    min-height: 80vh;
   }
 
-  .structure-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 3px;
+  .out-body {
+    padding: 16px;
   }
 
-  .structure-desc {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.5;
-  }
+  .mobile-toggle { display: flex; }
 
-  /* TECH STACK TAGS */
-  .tech-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+  .badge { display: none; }
+}
 
-  .tech-tag {
-    padding: 5px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-family: 'Space Mono', monospace;
-    border: 1px solid var(--border2);
-    color: var(--muted);
+@media (min-width: 769px) and (max-width: 1100px) {
+  .app {
+    grid-template-columns: 360px 1fr;
   }
+}
 
-  .tech-tag.primary {
-    border-color: var(--blue);
-    color: var(--blue);
-    background: rgba(77, 159, 255, 0.08);
+@media (min-width: 1400px) {
+  .app {
+    grid-template-columns: 460px 1fr;
   }
-
-  /* RESPONSIVE */
-  @media (max-width: 900px) {
-    .main {
-      grid-template-columns: 1fr;
-      height: auto;
-    }
-
-    .right-panel {
-      min-height: 70vh;
-    }
-  }
-
-  /* COPY TOAST */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--surface);
-    border: 1px solid var(--green);
-    color: var(--green);
-    padding: 10px 18px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    z-index: 999;
-    transform: translateY(20px);
-    opacity: 0;
-    transition: all 0.3s;
-  }
-
-  .toast.show {
-    transform: translateY(0);
-    opacity: 1;
-  }
+}
 </style>
 </head>
 <body>
@@ -795,152 +787,148 @@
 <header>
   <div class="logo">
     <div class="logo-icon">⚡</div>
-    WebPrompt <span>AI</span>
+    WebPrompt <em>AI</em>
   </div>
-  <div class="header-badge">v2.0 — MULTI-PROVIDER</div>
+  <div class="badge">MULTI-PROVIDER v2</div>
 </header>
 
-<div class="main">
+<div class="app">
 
-  <!-- LEFT PANEL -->
-  <div class="left-panel">
+  <!-- ═══ LEFT ═══ -->
+  <div class="left" id="leftPanel">
 
     <!-- AI CONFIG -->
     <div class="card">
-      <div class="card-title">Konfigurasi AI Provider</div>
-
+      <div class="card-title">AI Provider</div>
       <div class="provider-tabs" id="providerTabs">
-        <button class="provider-tab active" data-provider="claude">Claude</button>
-        <button class="provider-tab" data-provider="openai">OpenAI</button>
-        <button class="provider-tab" data-provider="groq">Groq</button>
-        <button class="provider-tab" data-provider="gemini">Gemini</button>
-        <button class="provider-tab" data-provider="openrouter">OpenRouter</button>
-        <button class="provider-tab" data-provider="together">Together AI</button>
+        <button class="ptab active" data-p="claude">Claude</button>
+        <button class="ptab" data-p="openai">OpenAI</button>
+        <button class="ptab" data-p="groq">Groq</button>
+        <button class="ptab" data-p="gemini">Gemini</button>
+        <button class="ptab" data-p="openrouter">OpenRouter</button>
+        <button class="ptab" data-p="together">Together AI</button>
       </div>
-
-      <div class="api-key-label" id="apiKeyLabel">API KEY — CLAUDE</div>
-      <div class="input-wrap">
-        <input type="password" id="apiKeyInput" placeholder="Masukkan API key..." />
-        <button class="eye-btn" onclick="toggleKey()" id="eyeBtn">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      <div class="lbl" id="keyLabel">API KEY — CLAUDE</div>
+      <div class="iw">
+        <input type="password" id="apiKey" placeholder="Masukkan API key..." />
+        <button class="eye" onclick="toggleKey()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
         </button>
       </div>
-      <div class="api-hint">🔒 Key hanya dipakai untuk request ini, tidak pernah disimpan</div>
+      <div class="api-hint">🔒 Key tidak pernah disimpan, hanya untuk request ini</div>
     </div>
 
     <!-- FORM -->
     <div class="card">
 
-      <div class="field-group">
-        <div class="field-label">Nama Website / Bisnis / Produk</div>
-        <input type="text" id="websiteName" placeholder="cth: Raffaza Arumi Dress Set Hijab Belt..." />
+      <div class="fg">
+        <div class="flabel">Nama Website / Bisnis / Produk</div>
+        <input type="text" class="plain" id="wName" placeholder="cth: Raffaza Arumi Dress Set Hijab Belt..." />
       </div>
 
-      <div class="field-group">
-        <div class="field-label">Deskripsi / Informasi</div>
-        <textarea id="websiteInfo" placeholder="- Jelaskan produk/layanan&#10;- Kelebihan & keunggulan&#10;- Target audiens&#10;- Harga & promo (opsional)&#10;- Mood atau vibe yang diinginkan"></textarea>
+      <div class="fg">
+        <div class="flabel">Deskripsi / Informasi</div>
+        <textarea class="plain" id="wInfo" placeholder="- Produk / layanan apa&#10;- Kelebihan & keunggulan&#10;- Target audiens&#10;- Harga & promo (opsional)&#10;- Mood yang diinginkan"></textarea>
       </div>
 
-      <!-- STYLE DESIGN -->
-      <div class="field-group">
-        <div class="field-label">Style Design</div>
-        <div class="dropdown-row">
+      <!-- STYLE -->
+      <div class="fg">
+        <div class="flabel">Style Design</div>
+        <div class="drow">
           <select id="styleSelect">
             <option value="">— Pilih Style Design —</option>
-            <option value="Minimalist">Minimalist — Apple style, whitespace luas</option>
-            <option value="Corporate">Corporate — IBM style, profesional & rapi</option>
+            <option value="Minimalist">Minimalist — Apple, whitespace luas</option>
+            <option value="Corporate">Corporate — IBM, profesional & grid rapi</option>
             <option value="Visual-Rich">Visual-Rich — Genshin Impact, ilustrasi dominan</option>
             <option value="Luxury">Luxury — Louis Vuitton, elegan & high-end</option>
             <option value="Playful">Playful — Duolingo, warna cerah & fun</option>
-            <option value="Brutalist">Brutalist — Bloomberg, typography besar & kasar</option>
+            <option value="Brutalist">Brutalist — Bloomberg, typography besar kasar</option>
             <option value="Glassmorphism">Glassmorphism — Windows UI, blur transparan</option>
             <option value="Neumorphism">Neumorphism — Dribbble UI, shadow lembut timbul</option>
             <option value="Dark Mode">Dark Mode — Netflix, background gelap</option>
             <option value="Bento Grid">Bento Grid — Apple marketing, kotak modular</option>
             <option value="Magazine Style">Magazine Style — NYT, editorial multi-kolom</option>
             <option value="Grid Portfolio">Grid Portfolio — Behance, grid visual</option>
-            <option value="One-Page Website">One-Page Website — Stripe, semua dalam satu halaman</option>
+            <option value="One-Page Website">One-Page Website — Stripe, semua satu halaman</option>
             <option value="Storytelling">Storytelling — Nat Geo, cerita visual scroll</option>
             <option value="Scrollytelling">Scrollytelling — NYT Interactive, animasi scroll</option>
-            <option value="Parallax">Parallax — Nike campaign, background bergerak</option>
+            <option value="Parallax">Parallax — Nike, background bergerak</option>
             <option value="3D Website">3D Website — Tesla, model 3D interaktif</option>
-            <option value="Immersive">Immersive — Cyberpunk 2077, cinematic experience</option>
-            <option value="Retro">Retro — Pac-Man themed, pixel neon</option>
-            <option value="Vintage">Vintage — Levi's, earthy & tekstur klasik</option>
+            <option value="Immersive">Immersive — Cyberpunk 2077, cinematic</option>
+            <option value="Retro">Retro — Pac-Man, pixel & neon</option>
+            <option value="Vintage">Vintage — Levi's, earthy & klasik</option>
             <option value="Futuristic">Futuristic — SpaceX, glow sci-fi UI</option>
-            <option value="Cyberpunk">Cyberpunk — neon glitch dark theme</option>
-            <option value="Anime Style">Anime Style — Honkai Star Rail, ilustrasi anime</option>
-            <option value="Illustration-Heavy">Illustration-Heavy — Dropbox, ilustrasi custom</option>
-            <option value="Photo-Centric">Photo-Centric — Airbnb, foto besar dominan</option>
-            <option value="Cinematic">Cinematic — Avatar site, video hero besar</option>
+            <option value="Cyberpunk">Cyberpunk — neon glitch dark</option>
+            <option value="Anime Style">Anime Style — Honkai Star Rail, anime</option>
+            <option value="Illustration-Heavy">Illustration-Heavy — Dropbox, custom ilustrasi</option>
+            <option value="Photo-Centric">Photo-Centric — Airbnb, foto dominan</option>
+            <option value="Cinematic">Cinematic — Avatar site, video hero</option>
             <option value="SaaS Landing Page">SaaS Landing Page — Notion, feature + testimonial</option>
-            <option value="Startup Style">Startup Style — Slack, modern friendly colorful</option>
+            <option value="Startup Style">Startup Style — Slack, modern & colorful</option>
             <option value="Product Showcase">Product Showcase — Apple iPhone, fokus satu produk</option>
             <option value="Marketplace">Marketplace — Amazon, grid produk banyak</option>
             <option value="Dashboard UI">Dashboard UI — Shopify admin, chart & panel</option>
-            <option value="POS / App UI">POS / App UI — Square, UI transaksi sederhana</option>
+            <option value="POS / App UI">POS / App UI — Square, transaksi sederhana</option>
             <option value="Community Platform">Community Platform — Discord, chat-centric</option>
-            <option value="Educational">Educational — Khan Academy, jelas & informatif</option>
+            <option value="Educational">Educational — Khan Academy, jelas informatif</option>
             <option value="News Portal">News Portal — BBC, banyak headline</option>
-            <option value="Personal Brand">Personal Brand — Gary Vee, fokus personal identity</option>
-            <option value="Portfolio">Portfolio — Tobias van Schneider, showcase karya</option>
+            <option value="Personal Brand">Personal Brand — Gary Vee, personal identity</option>
+            <option value="Portfolio">Portfolio — Tobias van Schneider, showcase</option>
             <option value="Event Website">Event Website — SXSW, countdown & agenda</option>
-            <option value="Campaign Microsite">Campaign Microsite — Coca-Cola, halaman promosi khusus</option>
-            <option value="Interactive Experience">Interactive Experience — Google experiments, game-like</option>
+            <option value="Campaign Microsite">Campaign Microsite — Coca-Cola, halaman promosi</option>
+            <option value="Interactive Experience">Interactive Experience — Google Experiments</option>
           </select>
-          <div class="ai-pick-wrap">
-            <div class="ai-pick-label">AI Pick</div>
-            <label class="toggle-wrap">
-              <input type="checkbox" id="styleAIPick" />
-              <span class="toggle-slider"></span>
+          <div class="aipick">
+            <div class="aipick-lbl">AI Pick</div>
+            <label class="toggle">
+              <input type="checkbox" id="styleAI" />
+              <span class="tslider"></span>
             </label>
           </div>
         </div>
       </div>
 
       <!-- FRAMEWORK -->
-      <div class="field-group">
-        <div class="field-label">Website Framework / Tipe</div>
-        <div class="dropdown-row">
-          <select id="frameworkSelect">
-            <option value="">— Pilih Framework/Tipe —</option>
-            <option value="Landing Page">1. Landing Page — Stripe style, CTA kuat, jual produk</option>
-            <option value="Company Profile">2. Company Profile — IBM style, profil perusahaan lengkap</option>
-            <option value="Product Showcase">3. Product Showcase — Apple style, satu produk mendalam</option>
-            <option value="Ecommerce / Marketplace">4. Ecommerce / Marketplace — Amazon, katalog & checkout</option>
-            <option value="SaaS Website">5. SaaS Website — Notion style, software landing page</option>
-            <option value="Web App / Dashboard">6. Web App / Dashboard — Shopify panel, chart & data</option>
-            <option value="Portfolio Website">7. Portfolio Website — Behance, gallery karya</option>
-            <option value="Media / Blog Website">8. Media / Blog — BBC, artikel & editorial</option>
-            <option value="Community Platform">9. Community Platform — Discord, forum & chat</option>
-            <option value="Event / Campaign Website">10. Event / Campaign — SXSW, countdown & jadwal</option>
-            <option value="Educational Platform">11. Educational Platform — Khan Academy, kursus & quiz</option>
-            <option value="Interactive Experience">12. Interactive Experience — Google Experiments, 3D animatif</option>
+      <div class="fg">
+        <div class="flabel">Tipe / Framework Website</div>
+        <div class="drow">
+          <select id="fwSelect">
+            <option value="">— Pilih Tipe Website —</option>
+            <option value="Landing Page">1. Landing Page — CTA kuat, jual produk/jasa</option>
+            <option value="Company Profile">2. Company Profile — profil perusahaan lengkap</option>
+            <option value="Product Showcase">3. Product Showcase — satu produk mendalam</option>
+            <option value="Ecommerce / Marketplace">4. Ecommerce / Marketplace — katalog & checkout</option>
+            <option value="SaaS Website">5. SaaS Website — software landing page</option>
+            <option value="Web App / Dashboard">6. Web App / Dashboard — chart & data panel</option>
+            <option value="Portfolio Website">7. Portfolio Website — gallery karya</option>
+            <option value="Media / Blog Website">8. Media / Blog — artikel & editorial</option>
+            <option value="Community Platform">9. Community Platform — forum & chat</option>
+            <option value="Event / Campaign Website">10. Event / Campaign — countdown & jadwal</option>
+            <option value="Educational Platform">11. Educational Platform — kursus & quiz</option>
+            <option value="Interactive Experience">12. Interactive Experience — 3D & animasi</option>
           </select>
-          <div class="ai-pick-wrap">
-            <div class="ai-pick-label">AI Pick</div>
-            <label class="toggle-wrap">
-              <input type="checkbox" id="frameworkAIPick" />
-              <span class="toggle-slider"></span>
+          <div class="aipick">
+            <div class="aipick-lbl">AI Pick</div>
+            <label class="toggle">
+              <input type="checkbox" id="fwAI" />
+              <span class="tslider"></span>
             </label>
           </div>
         </div>
       </div>
 
       <!-- KEYWORDS -->
-      <div class="field-group">
-        <div class="field-label">Kata Kunci Kualitas</div>
-        <div class="dropdown-row" style="align-items: flex-start;">
-          <div style="flex:1">
-            <div class="keywords-container" id="keywordsContainer">
-              <!-- badges injected by JS -->
-            </div>
-          </div>
-          <div class="ai-pick-wrap">
-            <div class="ai-pick-label">AI Pick</div>
-            <label class="toggle-wrap">
-              <input type="checkbox" id="keywordsAIPick" />
-              <span class="toggle-slider"></span>
+      <div class="fg">
+        <div class="flabel">Kata Kunci Kualitas</div>
+        <div class="drow" style="align-items:flex-start">
+          <div class="kw-box" id="kwBox"></div>
+          <div class="aipick" style="margin-top:4px">
+            <div class="aipick-lbl">AI Pick</div>
+            <label class="toggle">
+              <input type="checkbox" id="kwAI" />
+              <span class="tslider"></span>
             </label>
           </div>
         </div>
@@ -948,41 +936,36 @@
 
       <div class="btn-row">
         <button class="btn-reset" onclick="resetForm()">↺ Reset</button>
-        <button class="btn-generate" id="generateBtn" onclick="generateScript()">⚡ Generate Script</button>
-        <button class="btn-prompt" id="promptBtn" onclick="generatePrompt()">✦ Prompt</button>
+        <button class="btn-gen" id="genBtn" onclick="doGenerate('script')">⚡ Generate</button>
+        <button class="btn-prompt" id="promptBtn" onclick="doGenerate('prompt')">✦ Prompt</button>
       </div>
 
     </div>
-
   </div>
 
-  <!-- RIGHT PANEL -->
-  <div class="right-panel">
-    <div class="output-header">
-      <div class="output-title" id="outputTitle">
-        <span class="output-dot-off" id="statusDot"></span>
+  <!-- ═══ RIGHT ═══ -->
+  <div class="right">
+    <div class="out-header">
+      <div class="out-title">
+        <span class="dot-idle" id="statusDot"></span>
         Generated Output
       </div>
-      <div class="output-actions">
-        <button class="action-btn" onclick="copyOutput()" id="copyBtn">⎘ Copy</button>
-        <button class="action-btn" onclick="downloadOutput()" id="downloadBtn">↓ Download</button>
+      <div class="out-actions">
+        <button class="abtn" onclick="copyOut()">⎘ Copy</button>
+        <button class="abtn" onclick="dlOut()">↓ Download</button>
       </div>
     </div>
 
-    <div class="output-tabs" id="outputTabs" style="display:none">
-      <button class="output-tab active" data-tab="script">📄 Script</button>
-      <button class="output-tab" data-tab="structure">🏗 Struktur</button>
-      <button class="output-tab" data-tab="techstack">⚙️ Tech Stack</button>
+    <div class="out-tabs" id="outTabs">
+      <button class="otab active" data-tab="script">📄 Brief</button>
+      <button class="otab" data-tab="structure">🏗 Struktur</button>
+      <button class="otab" data-tab="tech">⚙️ Tech Stack</button>
     </div>
 
-    <div class="output-content" id="outputContent">
-      <div class="empty-state">
+    <div class="out-body" id="outBody">
+      <div class="empty">
         <div class="empty-icon">✦</div>
-        <div class="empty-text">
-          Isi form di sebelah kiri<br>
-          lalu klik <strong>Generate Script</strong> atau <strong>Prompt</strong><br>
-          untuk melihat hasilnya.
-        </div>
+        <div class="empty-text">Isi form di kiri<br>klik <strong>Generate</strong> atau <strong>Prompt</strong></div>
       </div>
     </div>
   </div>
@@ -992,476 +975,429 @@
 <div class="toast" id="toast">✓ Berhasil disalin!</div>
 
 <script>
-// === STATE ===
-let currentProvider = 'claude';
-let apiKeys = {};
-let currentOutput = '';
-let currentTab = 'script';
-
+// ── CONSTANTS ──
 const PROVIDERS = {
-  claude:      { name: 'Claude',      model: 'claude-sonnet-4-20250514',  endpoint: 'https://api.anthropic.com/v1/messages' },
-  openai:      { name: 'OpenAI',      model: 'gpt-4o',                    endpoint: 'https://api.openai.com/v1/chat/completions' },
-  groq:        { name: 'Groq',        model: 'llama-3.3-70b-versatile',   endpoint: 'https://api.groq.com/openai/v1/chat/completions' },
-  gemini:      { name: 'Gemini',      model: 'gemini-2.0-flash',          endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent' },
-  openrouter:  { name: 'OpenRouter',  model: 'anthropic/claude-3.5-sonnet', endpoint: 'https://openrouter.ai/api/v1/chat/completions' },
-  together:    { name: 'Together AI', model: 'meta-llama/Llama-3-70b-chat-hf', endpoint: 'https://api.together.xyz/v1/chat/completions' },
+  claude:     { name:'Claude',      model:'claude-sonnet-4-20250514', api:'claude' },
+  openai:     { name:'OpenAI',      model:'gpt-4o',                   api:'oai' },
+  groq:       { name:'Groq',        model:'llama-3.3-70b-versatile',  api:'oai', base:'https://api.groq.com/openai/v1' },
+  gemini:     { name:'Gemini',      model:'gemini-2.0-flash',         api:'gemini' },
+  openrouter: { name:'OpenRouter',  model:'anthropic/claude-3.5-sonnet', api:'oai', base:'https://openrouter.ai/api/v1' },
+  together:   { name:'Together AI', model:'meta-llama/Llama-3-70b-chat-hf', api:'oai', base:'https://api.together.xyz/v1' },
 };
 
-const KEYWORDS = [
-  'Amazing', 'High-End', 'World Class', 'Premium', 'Luxury',
-  'Cutting-Edge', 'Award-Winning', 'Next-Level', 'Ultra-Modern',
-  'Hyper-Realistic', 'Immersive', 'Visually Stunning', 'Pixel-Perfect',
-  'Conversion-Optimized', 'Performance-First', 'SEO-Friendly',
-  'Mobile-First', 'Accessible', 'Blazing Fast', 'Scalable',
-  'Minimalist', 'Bold & Confident', 'Timeless', 'Sophisticated',
-  'Trendsetting', 'Iconic', 'Unforgettable', 'Detail-Oriented',
-  'Cinematic', 'Storytelling-Driven', 'Data-Driven', 'Interactive',
-];
+const STYLE_OPTIONS = ['Minimalist','Corporate','Visual-Rich','Luxury','Playful','Brutalist','Glassmorphism','Neumorphism','Dark Mode','Bento Grid','Magazine Style','Grid Portfolio','One-Page Website','Storytelling','Scrollytelling','Parallax','3D Website','Immersive','Retro','Vintage','Futuristic','Cyberpunk','Anime Style','Illustration-Heavy','Photo-Centric','Cinematic','SaaS Landing Page','Startup Style','Product Showcase','Marketplace','Dashboard UI','POS / App UI','Community Platform','Educational','News Portal','Personal Brand','Portfolio','Event Website','Campaign Microsite','Interactive Experience'];
 
-let selectedKeywords = [];
+const FW_OPTIONS = ['Landing Page','Company Profile','Product Showcase','Ecommerce / Marketplace','SaaS Website','Web App / Dashboard','Portfolio Website','Media / Blog Website','Community Platform','Event / Campaign Website','Educational Platform','Interactive Experience'];
 
-// === INIT ===
+const KEYWORDS = ['Amazing','High-End','World Class','Premium','Luxury','Cutting-Edge','Award-Winning','Next-Level','Ultra-Modern','Hyper-Realistic','Immersive','Visually Stunning','Pixel-Perfect','Conversion-Optimized','Performance-First','SEO-Friendly','Mobile-First','Accessible','Blazing Fast','Scalable','Minimalist','Bold & Confident','Timeless','Sophisticated','Trendsetting','Iconic','Unforgettable','Detail-Oriented','Cinematic','Storytelling-Driven','Data-Driven','Interactive'];
+
+// ── STATE ──
+let provider = 'claude';
+let apiKeys = {};
+let selKeywords = [];
+let activeTab = 'script';
+let parsed = null;
+let plainOutput = '';
+
+// ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {
-  renderKeywords();
-  setupProviderTabs();
-  setupOutputTabs();
-  setupAIPicks();
+  renderKW();
+  initProviderTabs();
+  initOutTabs();
+  initAIPicks();
 });
 
-function renderKeywords() {
-  const container = document.getElementById('keywordsContainer');
-  container.innerHTML = KEYWORDS.map(kw => `
-    <span class="keyword-badge ${selectedKeywords.includes(kw) ? 'selected' : ''}"
-      onclick="toggleKeyword('${kw}')">${kw}</span>
-  `).join('');
+function renderKW() {
+  document.getElementById('kwBox').innerHTML = KEYWORDS.map(k =>
+    `<span class="kbadge${selKeywords.includes(k)?' on':''}" onclick="toggleKW('${k}')">${k}</span>`
+  ).join('');
 }
 
-function toggleKeyword(kw) {
-  if (selectedKeywords.includes(kw)) {
-    selectedKeywords = selectedKeywords.filter(k => k !== kw);
-  } else {
-    selectedKeywords.push(kw);
-  }
-  renderKeywords();
+function toggleKW(k) {
+  selKeywords = selKeywords.includes(k) ? selKeywords.filter(x=>x!==k) : [...selKeywords,k];
+  renderKW();
 }
 
-function setupProviderTabs() {
+function initProviderTabs() {
   document.getElementById('providerTabs').addEventListener('click', e => {
-    if (!e.target.classList.contains('provider-tab')) return;
-    document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('active'));
-    e.target.classList.add('active');
-    currentProvider = e.target.dataset.provider;
-    const key = apiKeys[currentProvider] || '';
-    document.getElementById('apiKeyInput').value = key;
-    document.getElementById('apiKeyLabel').textContent = `API KEY — ${PROVIDERS[currentProvider].name.toUpperCase()}`;
+    const btn = e.target.closest('.ptab');
+    if (!btn) return;
+    document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    provider = btn.dataset.p;
+    document.getElementById('apiKey').value = apiKeys[provider] || '';
+    document.getElementById('keyLabel').textContent = `API KEY — ${PROVIDERS[provider].name.toUpperCase()}`;
   });
-
-  document.getElementById('apiKeyInput').addEventListener('input', e => {
-    apiKeys[currentProvider] = e.target.value;
-  });
+  document.getElementById('apiKey').addEventListener('input', e => { apiKeys[provider] = e.target.value; });
 }
 
-function setupOutputTabs() {
-  document.querySelectorAll('.output-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      currentTab = tab.dataset.tab;
-      renderOutputTabs();
+function initOutTabs() {
+  document.querySelectorAll('.otab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.otab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      activeTab = t.dataset.tab;
+      if (parsed) renderParsed();
     });
   });
 }
 
-function setupAIPicks() {
-  ['style', 'framework', 'keywords'].forEach(id => {
-    document.getElementById(`${id}AIPick`).addEventListener('change', e => {
-      if (e.target.checked) {
-        document.getElementById(`${id}Select`) && (document.getElementById(`${id}Select`).disabled = true);
-        if (id === 'keywords') document.getElementById('keywordsContainer').style.opacity = '0.4';
-      } else {
-        document.getElementById(`${id}Select`) && (document.getElementById(`${id}Select`).disabled = false);
-        if (id === 'keywords') document.getElementById('keywordsContainer').style.opacity = '1';
-      }
-    });
+function initAIPicks() {
+  document.getElementById('styleAI').addEventListener('change', e => {
+    document.getElementById('styleSelect').disabled = e.target.checked;
+  });
+  document.getElementById('fwAI').addEventListener('change', e => {
+    document.getElementById('fwSelect').disabled = e.target.checked;
+  });
+  document.getElementById('kwAI').addEventListener('change', e => {
+    document.getElementById('kwBox').style.opacity = e.target.checked ? '0.4' : '1';
   });
 }
 
 function toggleKey() {
-  const inp = document.getElementById('apiKeyInput');
-  inp.type = inp.type === 'password' ? 'text' : 'password';
+  const i = document.getElementById('apiKey');
+  i.type = i.type === 'password' ? 'text' : 'password';
 }
 
 function resetForm() {
-  document.getElementById('websiteName').value = '';
-  document.getElementById('websiteInfo').value = '';
+  document.getElementById('wName').value = '';
+  document.getElementById('wInfo').value = '';
   document.getElementById('styleSelect').value = '';
-  document.getElementById('frameworkSelect').value = '';
-  selectedKeywords = [];
-  renderKeywords();
-  ['style','framework','keywords'].forEach(id => {
-    const cb = document.getElementById(`${id}AIPick`);
-    if (cb) cb.checked = false;
+  document.getElementById('fwSelect').value = '';
+  selKeywords = [];
+  renderKW();
+  ['styleAI','fwAI','kwAI'].forEach(id => {
+    document.getElementById(id).checked = false;
   });
   document.getElementById('styleSelect').disabled = false;
-  document.getElementById('frameworkSelect').disabled = false;
-  document.getElementById('keywordsContainer').style.opacity = '1';
+  document.getElementById('fwSelect').disabled = false;
+  document.getElementById('kwBox').style.opacity = '1';
   showEmpty();
 }
 
-// === CALL AI ===
+// ── AI CALL ──
 async function callAI(prompt) {
-  const apiKey = apiKeys[currentProvider] || '';
-  if (!apiKey.trim()) throw new Error(`Masukkan API Key untuk ${PROVIDERS[currentProvider].name} terlebih dahulu.`);
+  const key = apiKeys[provider]?.trim();
+  if (!key) throw new Error(`Masukkan API Key untuk ${PROVIDERS[provider].name} terlebih dahulu.`);
+  const p = PROVIDERS[provider];
 
-  const p = PROVIDERS[currentProvider];
-
-  if (currentProvider === 'claude') {
-    const res = await fetch(p.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: p.model,
-        max_tokens: 2048,
-        messages: [{ role: 'user', content: prompt }],
-      }),
+  if (p.api === 'claude') {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+      body: JSON.stringify({ model: p.model, max_tokens: 2500, messages:[{role:'user',content:prompt}] })
     });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.content[0].text;
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message);
+    return d.content[0].text;
 
-  } else if (currentProvider === 'gemini') {
-    const res = await fetch(`${p.endpoint}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-      }),
+  } else if (p.api === 'gemini') {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${p.model}:generateContent?key=${key}`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ contents:[{parts:[{text:prompt}]}] })
     });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.candidates[0].content.parts[0].text;
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message);
+    return d.candidates[0].content.parts[0].text;
 
   } else {
-    // OpenAI-compatible
-    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
-    if (currentProvider === 'openrouter') {
-      headers['HTTP-Referer'] = window.location.href;
-      headers['X-Title'] = 'WebPrompt AI';
-    }
-    const res = await fetch(p.endpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model: p.model,
-        max_tokens: 2048,
-        messages: [{ role: 'user', content: prompt }],
-      }),
+    const base = p.base || 'https://api.openai.com/v1';
+    const headers = {'Content-Type':'application/json','Authorization':`Bearer ${key}`};
+    if (provider === 'openrouter') { headers['HTTP-Referer'] = location.href; headers['X-Title'] = 'WebPrompt AI'; }
+    const r = await fetch(`${base}/chat/completions`, {
+      method:'POST', headers,
+      body: JSON.stringify({ model: p.model, max_tokens: 2500, messages:[{role:'user',content:prompt}] })
     });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.choices[0].message.content;
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message);
+    return d.choices[0].message.content;
   }
 }
 
-// === GENERATE SCRIPT ===
-async function generateScript() {
-  const name = document.getElementById('websiteName').value.trim();
-  const info = document.getElementById('websiteInfo').value.trim();
-  const style = document.getElementById('styleAIPick').checked ? 'AI akan memilihkan yang terbaik' : document.getElementById('styleSelect').value;
-  const framework = document.getElementById('frameworkAIPick').checked ? 'AI akan memilihkan yang terbaik' : document.getElementById('frameworkSelect').value;
-  const kw = document.getElementById('keywordsAIPick').checked ? 'AI akan memilihkan yang paling relevan' : selectedKeywords.join(', ') || 'tidak dipilih';
+// ── MAIN GENERATE ──
+async function doGenerate(mode) {
+  const name = document.getElementById('wName').value.trim();
+  const info = document.getElementById('wInfo').value.trim();
+  if (!name) { showErr('Masukkan nama website/bisnis terlebih dahulu.'); return; }
+  if (!info) { showErr('Isi deskripsi/informasi terlebih dahulu.'); return; }
 
-  if (!name) { showError('Masukkan nama website/bisnis terlebih dahulu.'); return; }
-  if (!info) { showError('Isi deskripsi/informasi website terlebih dahulu.'); return; }
+  const styleAI = document.getElementById('styleAI').checked;
+  const fwAI = document.getElementById('fwAI').checked;
+  const kwAI = document.getElementById('kwAI').checked;
 
-  showLoading('Menganalisis brief...');
+  const styleVal = styleAI ? null : document.getElementById('styleSelect').value;
+  const fwVal = fwAI ? null : document.getElementById('fwSelect').value;
+  const kwVal = kwAI ? [] : selKeywords;
 
-  const styleOptions = ['Minimalist','Corporate','Visual-Rich','Luxury','Playful','Brutalist','Glassmorphism','Neumorphism','Dark Mode','Bento Grid','Magazine Style','Grid Portfolio','One-Page Website','Storytelling','Scrollytelling','Parallax','3D Website','Immersive','Retro','Vintage','Futuristic','Cyberpunk','Anime Style','Illustration-Heavy','Photo-Centric','Cinematic','SaaS Landing Page','Startup Style','Product Showcase','Marketplace','Dashboard UI','POS / App UI','Community Platform','Educational','News Portal','Personal Brand','Portfolio','Event Website','Campaign Microsite','Interactive Experience'].join(', ');
+  setLoading(true, mode === 'prompt' ? 'Menulis prompt...' : 'Menganalisis brief...');
 
-  const frameworkOptions = ['Landing Page','Company Profile','Product Showcase','Ecommerce / Marketplace','SaaS Website','Web App / Dashboard','Portfolio Website','Media / Blog Website','Community Platform','Event / Campaign Website','Educational Platform','Interactive Experience'].join(', ');
+  try {
+    if (mode === 'script') {
+      await genScript(name, info, styleVal, fwVal, kwVal, styleAI, fwAI, kwAI);
+    } else {
+      await genPrompt(name, info, styleVal, fwVal, kwVal, styleAI, fwAI, kwAI);
+    }
+  } catch(e) {
+    showErr(e.message || 'Terjadi kesalahan. Periksa API key dan koneksi internet.');
+  } finally {
+    setLoading(false);
+  }
+}
 
-  const styleInstruction = document.getElementById('styleAIPick').checked
-    ? `Pilihkan style design yang paling cocok dari opsi ini: ${styleOptions}. Jelaskan pilihan kamu.`
-    : `Style Design yang dipilih: ${style || 'belum dipilih (beri rekomendasi singkat)'}`;
+async function genScript(name, info, styleVal, fwVal, kwVal, styleAI, fwAI, kwAI) {
+  const styleInstr = styleAI
+    ? `Pilihkan style design yang paling cocok untuk bisnis ini. WAJIB pilih dari opsi berikut saja (tidak boleh di luar ini): ${STYLE_OPTIONS.join(', ')}.`
+    : `Style design yang dipilih user: "${styleVal || 'belum dipilih — berikan rekomendasi singkat dari opsi yang tersedia'}"`;
 
-  const frameworkInstruction = document.getElementById('frameworkAIPick').checked
-    ? `Pilihkan tipe/framework yang paling cocok dari opsi ini: ${frameworkOptions}. Jelaskan pilihan kamu.`
-    : `Tipe/Framework yang dipilih: ${framework || 'belum dipilih (beri rekomendasi singkat)'}`;
+  const fwInstr = fwAI
+    ? `Pilihkan tipe/framework yang paling cocok. WAJIB pilih dari opsi berikut saja (tidak boleh di luar ini): ${FW_OPTIONS.join(', ')}.`
+    : `Tipe website yang dipilih user: "${fwVal || 'belum dipilih — berikan rekomendasi dari opsi yang tersedia'}"`;
 
-  const kwInstruction = document.getElementById('keywordsAIPick').checked
-    ? `Pilihkan 3-5 kata kunci kualitas yang paling relevan dari: ${KEYWORDS.join(', ')}.`
-    : `Kata kunci kualitas: ${kw}`;
+  const kwInstr = kwAI
+    ? `Pilihkan 3-5 kata kunci kualitas paling relevan. WAJIB pilih dari opsi berikut saja: ${KEYWORDS.join(', ')}.`
+    : `Kata kunci kualitas yang dipilih user: ${kwVal.length ? kwVal.join(', ') : 'belum dipilih'}`;
 
-  const prompt = `Kamu adalah seorang web developer & UX designer berpengalaman kelas dunia.
+  const prompt = `Kamu adalah senior web developer dan UX designer kelas dunia.
 
-Saya ingin membangun website dengan detail berikut:
+Data website:
+- Nama/Bisnis: ${name}
+- Deskripsi: ${info}
+- ${styleInstr}
+- ${fwInstr}
+- ${kwInstr}
 
-**Nama/Bisnis:** ${name}
-**Informasi:** ${info}
-**${styleInstruction}**
-**${frameworkInstruction}**
-**${kwInstruction}**
-
-Buatkan output dalam 3 bagian dengan format JSON berikut (output HANYA JSON, tidak ada penjelasan lain):
+Balas HANYA dengan JSON valid (tanpa markdown, tanpa backtick, tanpa penjelasan apapun di luar JSON):
 
 {
-  "script": "Narasi/brief lengkap untuk website ini, minimal 300 kata. Jelaskan visi, konsep desain, tone, target audiens, konten per section, dan strategi visual. Gunakan bahasa Indonesia yang profesional.",
+  "aiPicks": {
+    "style": "nama style yang dipilih AI jika styleAI aktif, jika tidak kosongkan string",
+    "framework": "nama framework yang dipilih AI jika fwAI aktif, jika tidak kosongkan string",
+    "keywords": ["array kata kunci yang dipilih AI jika kwAI aktif, jika tidak array kosong"]
+  },
+  "script": "Brief/narasi lengkap website minimal 300 kata dalam bahasa Indonesia. Jelaskan: visi, konsep desain, tone, target audiens, strategi visual, dan apa yang membuat website ini outstanding.",
   "structure": [
-    { "name": "Nama Section", "desc": "Penjelasan konten dan fungsi section ini" }
+    {"name": "Nama Section", "desc": "Fungsi dan konten section ini"}
   ],
   "techstack": {
-    "frontend": ["teknologi/library frontend yang direkomendasikan"],
-    "animation": ["library animasi yang cocok"],
-    "cms": "CMS atau backend yang disarankan",
-    "hosting": "Rekomendasi hosting",
-    "extras": ["tools atau library tambahan yang relevan"]
-  },
-  "aiPicks": {
-    "style": "nama style yang dipilih AI (hanya jika AI Pick style diaktifkan, jika tidak kosongkan)",
-    "framework": "nama framework yang dipilih AI (hanya jika AI Pick framework diaktifkan, jika tidak kosongkan)",
-    "keywords": ["kata kunci yang dipilih AI (hanya jika AI Pick keywords diaktifkan, jika tidak array kosong)"]
+    "frontend": ["teknologi frontend"],
+    "animation": ["library animasi"],
+    "cms": "CMS atau backend",
+    "hosting": "rekomendasi hosting",
+    "extras": ["tools tambahan"]
   }
 }`;
 
-  try {
-    const result = await callAI(prompt);
-    let parsed;
-    try {
-      const clean = result.replace(/```json|```/g, '').trim();
-      parsed = JSON.parse(clean);
-    } catch {
-      showError('AI memberikan response yang tidak valid. Coba lagi.');
-      return;
-    }
+  const raw = await callAI(prompt);
+  const clean = raw.replace(/```json|```/g,'').trim();
+  parsed = JSON.parse(clean);
+  plainOutput = JSON.stringify(parsed, null, 2);
 
-    // Apply AI picks to UI
-    if (document.getElementById('styleAIPick').checked && parsed.aiPicks?.style) {
-      document.getElementById('styleSelect').value = parsed.aiPicks.style;
-    }
-    if (document.getElementById('frameworkAIPick').checked && parsed.aiPicks?.framework) {
-      document.getElementById('frameworkSelect').value = parsed.aiPicks.framework;
-    }
-    if (document.getElementById('keywordsAIPick').checked && parsed.aiPicks?.keywords?.length) {
-      selectedKeywords = parsed.aiPicks.keywords;
-      renderKeywords();
-    }
-
-    currentOutput = JSON.stringify(parsed, null, 2);
-    window._parsedOutput = parsed;
-    showOutput(parsed);
-
-  } catch (err) {
-    showError(err.message || 'Terjadi kesalahan. Periksa API key dan koneksi.');
+  // Apply AI picks to dropdowns
+  if (styleAI && parsed.aiPicks?.style) {
+    document.getElementById('styleSelect').value = parsed.aiPicks.style;
   }
+  if (fwAI && parsed.aiPicks?.framework) {
+    document.getElementById('fwSelect').value = parsed.aiPicks.framework;
+  }
+  if (kwAI && parsed.aiPicks?.keywords?.length) {
+    selKeywords = parsed.aiPicks.keywords;
+    renderKW();
+  }
+
+  // Show tabs
+  document.getElementById('outTabs').classList.add('visible');
+  activeTab = 'script';
+  document.querySelectorAll('.otab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'script'));
+  document.getElementById('statusDot').className = 'dot-live';
+  renderParsed();
 }
 
-// === GENERATE PROMPT ONLY ===
-async function generatePrompt() {
-  const name = document.getElementById('websiteName').value.trim();
-  const info = document.getElementById('websiteInfo').value.trim();
-  const style = document.getElementById('styleAIPick').checked ? 'terbaik sesuai brief' : document.getElementById('styleSelect').value;
-  const framework = document.getElementById('frameworkAIPick').checked ? 'terbaik sesuai brief' : document.getElementById('frameworkSelect').value;
-  const kw = selectedKeywords.join(', ') || 'premium, world class';
+async function genPrompt(name, info, styleVal, fwVal, kwVal, styleAI, fwAI, kwAI) {
+  const styleAIInstr = styleAI
+    ? `Pertama, pilihkan style design paling cocok dari opsi ini SAJA (WAJIB pilih dari sini, tidak boleh menggunakan style lain): ${STYLE_OPTIONS.join(', ')}.`
+    : '';
+  const fwAIInstr = fwAI
+    ? `Juga pilihkan tipe website paling cocok dari opsi ini SAJA (WAJIB pilih dari sini, tidak boleh menggunakan tipe lain): ${FW_OPTIONS.join(', ')}.`
+    : '';
 
-  if (!name) { showError('Masukkan nama website/bisnis terlebih dahulu.'); return; }
-
-  showLoading('Menulis prompt...');
+  const styleUsed = styleAI ? '[AI akan memilih dari dropdown]' : (styleVal || 'tidak dipilih');
+  const fwUsed = fwAI ? '[AI akan memilih dari dropdown]' : (fwVal || 'tidak dipilih');
+  const kwUsed = kwAI ? '[AI akan memilih dari list]' : (kwVal.length ? kwVal.join(', ') : 'tidak dipilih');
 
   const prompt = `Kamu adalah expert prompt engineer untuk web development.
 
-Buatkan satu mega-prompt siap pakai (copy-paste ke AI coding tools seperti Cursor, v0, atau ChatGPT) untuk membangun website berikut:
+${styleAIInstr}
+${fwAIInstr}
 
-Nama: ${name}
-Info: ${info || '(tidak ada info tambahan)'}
-Style: ${style || 'sesuaikan dengan brief'}
-Tipe: ${framework || 'sesuaikan dengan brief'}
-Kualitas: ${kw}
+Buatkan output JSON berikut (HANYA JSON, tanpa backtick, tanpa penjelasan):
 
-Prompt harus:
-- Komprehensif dan detail (minimal 400 kata)
-- Mencakup: struktur halaman, warna, font, animasi, komponen UI, responsive behavior, interaksi
-- Dalam bahasa Inggris teknis yang jelas
-- Langsung bisa dipakai di Cursor/v0/Bolt.new
-
-Berikan HANYA prompt-nya saja, tanpa penjelasan atau pembuka.`;
-
-  try {
-    const result = await callAI(prompt);
-    currentOutput = result;
-    window._parsedOutput = null;
-    showPromptOutput(result);
-  } catch (err) {
-    showError(err.message || 'Terjadi kesalahan. Periksa API key dan koneksi.');
-  }
+{
+  "aiPicks": {
+    "style": "${styleAI ? 'nama style yang kamu pilih dari dropdown' : styleVal || ''}",
+    "framework": "${fwAI ? 'nama framework yang kamu pilih dari dropdown' : fwVal || ''}"
+  },
+  "prompt": "Tulis mega-prompt dalam bahasa Inggris untuk dipakai di Cursor / v0 / Bolt.new. Mulai dengan: Style: [nama style]. Framework: [nama tipe website]. Quality Keywords: [kata kunci]. Kemudian tulis instruksi detail yang mencakup: struktur halaman lengkap, color palette spesifik (hex), font recommendations, animasi dan transisi, komponen UI detail, responsive behavior, interaksi user, dan hal teknis lainnya. Minimal 400 kata. Jangan ada penjelasan di luar prompt itu sendiri."
 }
 
-// === RENDER OUTPUT ===
-function showOutput(parsed) {
-  const tabs = document.getElementById('outputTabs');
-  tabs.style.display = 'flex';
+Data website:
+- Nama: ${name}
+- Deskripsi: ${info}
+- Style: ${styleUsed}
+- Tipe: ${fwUsed}
+- Kata Kunci: ${kwUsed}`;
 
-  const dot = document.getElementById('statusDot');
-  dot.className = 'dot';
+  const raw = await callAI(prompt);
+  const clean = raw.replace(/```json|```/g,'').trim();
+  const result = JSON.parse(clean);
 
-  currentTab = 'script';
-  document.querySelectorAll('.output-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.tab === 'script');
-  });
+  parsed = null;
+  plainOutput = result.prompt;
 
-  renderOutputTabs();
-}
-
-function renderOutputTabs() {
-  const parsed = window._parsedOutput;
-  const content = document.getElementById('outputContent');
-
-  if (!parsed) {
-    // plain prompt output
-    content.innerHTML = `
-      <div class="output-section">
-        <div class="section-label">Generated Prompt</div>
-        <div class="output-box prompt-box">${escapeHtml(currentOutput)}</div>
-      </div>`;
-    return;
+  // Apply AI picks
+  if (styleAI && result.aiPicks?.style) {
+    document.getElementById('styleSelect').value = result.aiPicks.style;
+    document.getElementById('styleSelect').disabled = false;
+  }
+  if (fwAI && result.aiPicks?.framework) {
+    document.getElementById('fwSelect').value = result.aiPicks.framework;
+    document.getElementById('fwSelect').disabled = false;
   }
 
-  if (currentTab === 'script') {
-    let aiPicksHtml = '';
+  // Read final values from dropdowns (after AI pick applied)
+  const finalStyle = document.getElementById('styleSelect').value || styleVal || '—';
+  const finalFw = document.getElementById('fwSelect').value || fwVal || '—';
+  const finalKw = kwAI ? (selKeywords.length ? selKeywords : KEYWORDS.slice(0,3)) : kwVal;
+
+  document.getElementById('outTabs').classList.remove('visible');
+  document.getElementById('statusDot').className = 'dot-live';
+
+  document.getElementById('outBody').innerHTML = `
+    <div class="osec">
+      <div class="oslabel">✦ Konfigurasi Terpilih</div>
+      <div class="prompt-meta">
+        <div class="prompt-meta-row">
+          <div class="pmr-key">Style Design</div>
+          <div class="pmr-val">${esc(finalStyle)}</div>
+        </div>
+        <div class="prompt-meta-row">
+          <div class="pmr-key">Tipe Website</div>
+          <div class="pmr-val">${esc(finalFw)}</div>
+        </div>
+        <div class="prompt-meta-row">
+          <div class="pmr-key">Kata Kunci</div>
+          <div class="pmr-kw">${finalKw.map(k=>`<span>${esc(k)}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">—</span>'}</div>
+        </div>
+      </div>
+    </div>
+    <div class="osec">
+      <div class="oslabel">⚡ Generated Prompt — siap pakai di Cursor / v0 / Bolt.new</div>
+      <div class="prompt-code-box">${esc(result.prompt)}</div>
+    </div>`;
+}
+
+// ── RENDER PARSED (Script mode) ──
+function renderParsed() {
+  if (!parsed) return;
+  const body = document.getElementById('outBody');
+
+  const style = document.getElementById('styleSelect').value || '—';
+  const fw = document.getElementById('fwSelect').value || '—';
+
+  if (activeTab === 'script') {
     const picks = parsed.aiPicks || {};
-    if (picks.style || picks.framework || (picks.keywords && picks.keywords.length)) {
-      const items = [];
-      if (picks.style) items.push(`<span class="highlight">Style:</span> ${picks.style}`);
-      if (picks.framework) items.push(`<span class="highlight">Framework:</span> ${picks.framework}`);
-      if (picks.keywords?.length) items.push(`<span class="highlight">Keywords:</span> ${picks.keywords.join(', ')}`);
-      aiPicksHtml = `
-        <div class="output-section">
-          <div class="section-label">✦ AI Picks</div>
-          <div class="output-box">${items.join('\n')}</div>
-        </div>`;
+    let picksHtml = '';
+    if (picks.style || picks.framework || picks.keywords?.length) {
+      picksHtml = `<div class="osec">
+        <div class="oslabel">✦ AI Picks</div>
+        <div class="prompt-meta">
+          ${picks.style ? `<div class="prompt-meta-row"><div class="pmr-key">Style</div><div class="pmr-val">${esc(picks.style)}</div></div>` : ''}
+          ${picks.framework ? `<div class="prompt-meta-row"><div class="pmr-key">Framework</div><div class="pmr-val">${esc(picks.framework)}</div></div>` : ''}
+          ${picks.keywords?.length ? `<div class="prompt-meta-row"><div class="pmr-key">Keywords</div><div class="pmr-kw">${picks.keywords.map(k=>`<span>${esc(k)}</span>`).join('')}</div></div>` : ''}
+        </div>
+      </div>`;
     }
 
-    content.innerHTML = `
-      ${aiPicksHtml}
-      <div class="output-section">
-        <div class="section-label">Brief & Konsep Website</div>
-        <div class="output-box">${escapeHtml(parsed.script || '')}</div>
+    body.innerHTML = `${picksHtml}
+      <div class="osec">
+        <div class="oslabel">Brief & Konsep Website</div>
+        <div class="obox">${esc(parsed.script||'')}</div>
       </div>`;
   }
 
-  else if (currentTab === 'structure') {
-    const items = (parsed.structure || []).map((s, i) => `
-      <div class="structure-item">
-        <div class="structure-num">${String(i+1).padStart(2,'0')}</div>
-        <div>
-          <div class="structure-name">${escapeHtml(s.name)}</div>
-          <div class="structure-desc">${escapeHtml(s.desc)}</div>
-        </div>
+  else if (activeTab === 'structure') {
+    const items = (parsed.structure||[]).map((s,i) => `
+      <div class="sitem">
+        <div class="snum">${String(i+1).padStart(2,'0')}</div>
+        <div><div class="sname">${esc(s.name)}</div><div class="sdesc">${esc(s.desc)}</div></div>
       </div>`).join('');
-
-    content.innerHTML = `
-      <div class="output-section">
-        <div class="section-label">Struktur Halaman</div>
-        <div class="output-box" style="padding:0;">${items}</div>
-      </div>`;
+    body.innerHTML = `<div class="osec">
+      <div class="oslabel">Struktur Halaman</div>
+      <div class="obox" style="padding:0">${items}</div>
+    </div>`;
   }
 
-  else if (currentTab === 'techstack') {
+  else if (activeTab === 'tech') {
     const ts = parsed.techstack || {};
-    const fe = (ts.frontend || []).map(t => `<span class="tech-tag primary">${escapeHtml(t)}</span>`).join('');
-    const anim = (ts.animation || []).map(t => `<span class="tech-tag">${escapeHtml(t)}</span>`).join('');
-    const ex = (ts.extras || []).map(t => `<span class="tech-tag">${escapeHtml(t)}</span>`).join('');
-
-    content.innerHTML = `
-      <div class="output-section">
-        <div class="section-label">Frontend</div>
-        <div class="tech-tags">${fe}</div>
+    body.innerHTML = `
+      <div class="osec"><div class="oslabel">Frontend</div>
+        <div class="ttags">${(ts.frontend||[]).map(t=>`<span class="ttag hi">${esc(t)}</span>`).join('')}</div>
       </div>
-      <div class="output-section">
-        <div class="section-label">Animasi</div>
-        <div class="tech-tags">${anim}</div>
+      <div class="osec"><div class="oslabel">Animasi</div>
+        <div class="ttags">${(ts.animation||[]).map(t=>`<span class="ttag">${esc(t)}</span>`).join('')}</div>
       </div>
-      <div class="output-section">
-        <div class="section-label">CMS / Backend</div>
-        <div class="output-box">${escapeHtml(ts.cms || '-')}</div>
+      <div class="osec"><div class="oslabel">CMS / Backend</div>
+        <div class="obox">${esc(ts.cms||'—')}</div>
       </div>
-      <div class="output-section">
-        <div class="section-label">Hosting</div>
-        <div class="output-box">${escapeHtml(ts.hosting || '-')}</div>
+      <div class="osec"><div class="oslabel">Hosting</div>
+        <div class="obox">${esc(ts.hosting||'—')}</div>
       </div>
-      <div class="output-section">
-        <div class="section-label">Extras</div>
-        <div class="tech-tags">${ex}</div>
+      <div class="osec"><div class="oslabel">Extras</div>
+        <div class="ttags">${(ts.extras||[]).map(t=>`<span class="ttag">${esc(t)}</span>`).join('')}</div>
       </div>`;
   }
 }
 
-function showPromptOutput(text) {
-  document.getElementById('outputTabs').style.display = 'none';
-  const dot = document.getElementById('statusDot');
-  dot.className = 'dot';
-  window._parsedOutput = null;
+// ── UI HELPERS ──
+function setLoading(on, msg='') {
+  const gen = document.getElementById('genBtn');
+  const pro = document.getElementById('promptBtn');
+  gen.disabled = on;
+  pro.disabled = on;
 
-  document.getElementById('outputContent').innerHTML = `
-    <div class="output-section">
-      <div class="section-label">⚡ Generated Prompt</div>
-      <div class="output-box prompt-box">${escapeHtml(text)}</div>
-    </div>`;
-}
-
-function showLoading(msg = 'Generating...') {
-  document.getElementById('outputTabs').style.display = 'none';
-  const dot = document.getElementById('statusDot');
-  dot.className = 'dot';
-
-  document.getElementById('outputContent').innerHTML = `
-    <div class="loading-wrap">
-      <div class="loading-bars">
-        ${[1,2,3,4,5].map(() => '<div class="loading-bar"></div>').join('')}
-      </div>
-      <div class="loading-text">${msg}</div>
-    </div>`;
+  if (on) {
+    document.getElementById('outBody').innerHTML = `
+      <div class="loading">
+        <div class="lbars">${[1,2,3,4,5].map(()=>'<div class="lbar"></div>').join('')}</div>
+        <div class="ltext">${msg}</div>
+      </div>`;
+  }
 }
 
 function showEmpty() {
-  document.getElementById('outputTabs').style.display = 'none';
-  const dot = document.getElementById('statusDot');
-  dot.className = 'output-dot-off';
-  document.getElementById('outputContent').innerHTML = `
-    <div class="empty-state">
+  document.getElementById('outTabs').classList.remove('visible');
+  document.getElementById('statusDot').className = 'dot-idle';
+  document.getElementById('outBody').innerHTML = `
+    <div class="empty">
       <div class="empty-icon">✦</div>
-      <div class="empty-text">
-        Isi form di sebelah kiri<br>
-        lalu klik <strong>Generate Script</strong> atau <strong>Prompt</strong><br>
-        untuk melihat hasilnya.
-      </div>
+      <div class="empty-text">Isi form di kiri<br>klik <strong>Generate</strong> atau <strong>Prompt</strong></div>
+    </div>`;
+  parsed = null;
+  plainOutput = '';
+}
+
+function showErr(msg) {
+  document.getElementById('outTabs').classList.remove('visible');
+  document.getElementById('statusDot').className = 'dot-idle';
+  document.getElementById('outBody').innerHTML = `
+    <div class="errstate">
+      <div class="eicon">⚠️</div>
+      <div class="emsg">${esc(msg)}</div>
     </div>`;
 }
 
-function showError(msg) {
-  document.getElementById('outputTabs').style.display = 'none';
-  document.getElementById('outputContent').innerHTML = `
-    <div class="empty-state" style="opacity:1">
-      <div style="font-size:28px">⚠️</div>
-      <div class="empty-text" style="color: var(--accent);">${escapeHtml(msg)}</div>
-    </div>`;
-}
-
-// === ACTIONS ===
-function copyOutput() {
-  let text = currentOutput;
-  if (window._parsedOutput) {
-    const p = window._parsedOutput;
-    if (currentTab === 'script') text = p.script || '';
-    else if (currentTab === 'structure') text = (p.structure || []).map((s,i) => `${i+1}. ${s.name}\n   ${s.desc}`).join('\n\n');
-    else if (currentTab === 'techstack') {
-      const ts = p.techstack || {};
-      text = `Frontend: ${(ts.frontend||[]).join(', ')}\nAnimasi: ${(ts.animation||[]).join(', ')}\nCMS: ${ts.cms}\nHosting: ${ts.hosting}\nExtras: ${(ts.extras||[]).join(', ')}`;
-    }
-  }
+function copyOut() {
+  const text = plainOutput;
   if (!text) return;
   navigator.clipboard.writeText(text).then(() => {
     const t = document.getElementById('toast');
@@ -1470,23 +1406,18 @@ function copyOutput() {
   });
 }
 
-function downloadOutput() {
-  let text = currentOutput;
-  if (!text) return;
-  const blob = new Blob([text], { type: 'text/plain' });
+function dlOut() {
+  if (!plainOutput) return;
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  a.href = URL.createObjectURL(new Blob([plainOutput], {type:'text/plain'}));
   a.download = `webprompt-${Date.now()}.txt`;
   a.click();
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/\n/g,'<br>');
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/\n/g,'<br>');
 }
 </script>
 </body>
