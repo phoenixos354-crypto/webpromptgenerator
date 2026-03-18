@@ -1,7 +1,8 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/", "destination": "/public/index.html" },
-    { "source": "/login.html", "destination": "/public/login.html" }
+  "routes": [
+    { "src": "/api/verify", "dest": "/api/verify.js" },
+    { "src": "/login.html", "dest": "/public/login.html" },
+    { "src": "/(.*)", "dest": "/api/gate.js" }
   ]
 }
