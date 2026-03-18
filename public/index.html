@@ -1225,27 +1225,38 @@ async function genPrompt(name, info, styleVal, fwVal, kwVal, styleAI, fwAI, kwAI
   const fwUsed = fwAI ? '[AI akan memilih dari dropdown]' : (fwVal || 'tidak dipilih');
   const kwUsed = kwAI ? '[AI akan memilih dari list]' : (kwVal.length ? kwVal.join(', ') : 'tidak dipilih');
 
-  const prompt = `Kamu adalah expert prompt engineer untuk web development.
-
-${styleAIInstr}
-${fwAIInstr}
-
-Buatkan output JSON berikut (HANYA JSON, tanpa backtick, tanpa penjelasan):
-
-{
-  "aiPicks": {
-    "style": "${styleAI ? 'nama style yang kamu pilih dari dropdown' : styleVal || ''}",
-    "framework": "${fwAI ? 'nama framework yang kamu pilih dari dropdown' : fwVal || ''}"
-  },
-  "prompt": "Tulis mega-prompt dalam bahasa Inggris untuk dipakai di Cursor / v0 / Bolt.new. Mulai dengan: Style: [nama style]. Framework: [nama tipe website]. Quality Keywords: [kata kunci]. Kemudian tulis instruksi detail yang mencakup: struktur halaman lengkap, color palette spesifik (hex), font recommendations, animasi dan transisi, komponen UI detail, responsive behavior, interaksi user, dan hal teknis lainnya. Minimal 400 kata. Jangan ada penjelasan di luar prompt itu sendiri."
-}
-
-Data website:
-- Nama: ${name}
-- Deskripsi: ${info}
-- Style: ${styleUsed}
-- Tipe: ${fwUsed}
-- Kata Kunci: ${kwUsed}`;
+  const prompt = [
+    "Kamu adalah expert prompt engineer untuk web development.",
+    "",
+    styleAIInstr,
+    fwAIInstr,
+    "",
+    "ATURAN WAJIB - TIDAK BOLEH DILANGGAR:",
+    "1. GUNAKAN HANYA data yang ada di bagian Data website di bawah.",
+    "2. DILARANG mengarang data apapun: alamat, nomor telepon, email, jam operasional, nama produk, harga.",
+    "3. Jika user memberi alamat atau nomor HP - GUNAKAN PERSIS data tersebut, tidak boleh diganti.",
+    "4. Jika data tidak ada di input user, tulis placeholder seperti [ALAMAT] atau [NO_TELEPON].",
+    "5. Semua konten harus dari data user, bukan imajinasi AI.",
+    "",
+    "Balas HANYA dengan JSON valid (tanpa backtick, tanpa penjelasan apapun di luar JSON):",
+    "",
+    JSON.stringify({
+      aiPicks: {
+        style: styleAI ? "PILIH_DARI_DROPDOWN" : (styleVal || ""),
+        framework: fwAI ? "PILIH_DARI_DROPDOWN" : (fwVal || "")
+      },
+      prompt: "MEGA_PROMPT_DISINI"
+    }, null, 2).replace('"PILIH_DARI_DROPDOWN"', styleAI ? `"(pilih satu dari: ${STYLE_OPTIONS.slice(0,5).join(', ')}, dst)"` : `"${styleVal||''}"`)
+     .replace('"MEGA_PROMPT_DISINI"', '"Tulis mega-prompt bahasa Inggris untuk Cursor/v0/Bolt.new. Baris pertama harus: Style: [style]. Framework: [framework]. Quality Keywords: [kata kunci]. Lalu detail: struktur halaman, color palette hex, font, animasi, komponen UI, responsive, interaksi. WAJIB gunakan data persis dari user (nama, alamat, telepon, dll). Minimal 400 kata."'),
+    "",
+    "Data website:",
+    "Nama: " + name,
+    "Info lengkap dari user (SALIN PERSIS ke dalam prompt, termasuk alamat dan nomor HP):",
+    info,
+    "Style: " + styleUsed,
+    "Tipe: " + fwUsed,
+    "Kata Kunci: " + kwUsed
+  ].join("\n");
 
   const raw = await callAI(prompt);
   const clean = raw.replace(/```json|```/g,'').trim();
