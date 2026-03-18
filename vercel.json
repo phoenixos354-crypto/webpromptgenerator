@@ -1,5 +1,9 @@
 {
   "version": 2,
+  "builds": [
+    { "src": "public/*.html", "use": "@vercel/static" },
+    { "src": "api/*.js", "use": "@vercel/node" }
+  ],
   "routes": [
     { "src": "/api/verify", "dest": "/api/verify.js" },
     { "src": "/login.html", "dest": "/public/login.html" },
