@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/login.html", "destination": "/public/login.html" }
+  ],
+  "functions": {
+    "api/verify.js": {
+      "runtime": "nodejs20.x"
+    }
+  }
+}
